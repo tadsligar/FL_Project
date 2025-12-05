@@ -1,0 +1,8 @@
+# Zero-Shot Physician Baseline - Full Dataset
+# Tests if adding "You are an experienced physician." improves performance
+# Same temperature (0.0) as the currently running zero-shot baseline
+
+name: "Zero-shot physician baseline @ temp 0.0 (FULL)"
+script: test_zero_shot_physician.py
+config: configs/qwen25_32b_temp00.yaml
+args: --n 1071 --output runs/zero_shot_physician_temp00_full

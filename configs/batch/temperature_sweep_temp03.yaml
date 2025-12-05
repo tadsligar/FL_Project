@@ -1,0 +1,29 @@
+# Temperature 0.3 - Full Comparison (n=100)
+# All methods at temperature 0.3 for comprehensive comparison
+# Estimated time: ~8 hours
+
+experiments:
+  - name: "Zero-shot @ temp 0.3 (n=100)"
+    script: test_zero_shot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/temp03_comparison/zero_shot_temp03
+
+  - name: "Single-shot CoT @ temp 0.3 (n=100)"
+    script: test_single_shot_cot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/temp03_comparison/single_shot_cot_temp03
+
+  - name: "Debate baseline @ temp 0.3 (n=100)"
+    script: test_debate_baseline_rerun.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/temp03_comparison/debate_baseline_temp03
+
+  - name: "Debate CoT enhanced @ temp 0.3 (n=100)"
+    script: test_debate_cot_enhanced.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/temp03_comparison/debate_cot_temp03
+
+  - name: "Physician role debate @ temp 0.3 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/temp03_comparison/debate_physician_role_temp03

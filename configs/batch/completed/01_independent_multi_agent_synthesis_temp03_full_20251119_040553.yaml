@@ -1,0 +1,4 @@
+name: "Independent multi-agent with LLM synthesis @ temp 0.3 (FULL)"
+script: "test_independent_multi_agent.py"
+config: "configs/qwen25_32b_temp03.yaml"
+args: "--n 1071 --output runs/independent_multi_agent_synthesis_temp03_full"

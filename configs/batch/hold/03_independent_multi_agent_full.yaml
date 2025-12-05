@@ -1,0 +1,12 @@
+# Independent Multi-Agent - Full Dataset
+# Architecture:
+#   1. LLM selects top 3 specialists (1 LLM call)
+#   2. Each specialist analyzes independently (3 LLM calls)
+#   3. Final reviewer makes choice (1 LLM call)
+# Total: 5 LLM calls per question
+# Temperature: 0.0 (same as zero-shot baseline)
+
+name: "Independent multi-agent @ temp 0.0 (FULL)"
+script: test_independent_multi_agent.py
+config: configs/qwen25_32b_temp00.yaml
+args: --n 1071 --output runs/independent_multi_agent_temp00_full

@@ -1,0 +1,56 @@
+# Configuration for Llama3:70B - High-quality medical reasoning
+# Requires: 40GB disk space, 48GB+ GPU VRAM (or 64GB+ RAM for CPU)
+
+model: "llama3:70b"
+provider: "ollama"
+temperature: 0.3
+max_output_tokens: 2000  # Increased for planner (needs to enumerate all specialties)
+
+planner:
+  top_k: 5
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 5
+  max_retries: 1
+  timeout_seconds: 1200  # 20 minutes per call for 70B model (planner prompt is very long)
+
+logging:
+  traces_dir: "runs/llama3_70b"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 1  # Run sequentially to avoid memory issues
+  rate_limit_per_minute: 20
+
+# Performance notes:
+# - 70B model is ~10x slower than 8B but significantly better quality
+# - Planner call can take 10-15 minutes (very long prompt enumerating all specialties)
+# - Specialist calls: 1-3 minutes each
+# - Total case time: 15-25 minutes (planner + 5 specialists + aggregator)
+# - For 10 questions: ~3-5 hours
+# - For 100 MedQA evaluations: ~30-40 hours
+# - Recommend: Run overnight or over weekend for large evals

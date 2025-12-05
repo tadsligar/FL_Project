@@ -1,0 +1,48 @@
+# Configuration for Llama3:8B - Phase 7c: 2 Specialists + No Generalist + Temperature 0.5
+# Tests if generalist triage adds value or just adds noise
+# Expected: May improve or hurt - interesting ablation study
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.5  # Best temperature
+max_output_tokens: 800
+
+planner:
+  top_k: 2  # Best specialist count
+  allow_generalist: false  # Skip generalist triage
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 2
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/llama3_8b_2spec_temp05_nogeneralist"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

@@ -1,0 +1,55 @@
+# Configuration for Llama3:8B - Differential Temperatures (Phase 4)
+# Planner: 0.3 (balanced), Specialist: 0.5 (creative), Aggregator: 0.1 (conservative)
+# Tests if role-appropriate temperatures improve performance
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.3  # Default fallback temperature
+
+# Agent-specific temperatures (new feature!)
+agent_temperatures:
+  planner: 0.3      # Balanced specialty selection
+  specialist: 0.5   # High exploration for creative differentials
+  aggregator: 0.1   # Conservative final decision synthesis
+
+max_output_tokens: 800
+
+planner:
+  top_k: 2  # Use 2 specialists (Phase 3 showed this works better)
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 2
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/llama3_8b_difftemp"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

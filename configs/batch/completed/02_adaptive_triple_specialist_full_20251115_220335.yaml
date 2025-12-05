@@ -1,0 +1,11 @@
+# Adaptive Triple Specialist - Full Dataset
+# Two-step approach:
+#   1. LLM selects top 3 specialists for the question (1 LLM call)
+#   2. LLM answers as triple board-certified in those areas (1 LLM call)
+# Total: 2 LLM calls per question
+# Temperature: 0.0 (same as zero-shot baseline)
+
+name: "Adaptive triple specialist @ temp 0.0 (FULL)"
+script: test_adaptive_triple_specialist.py
+config: configs/qwen25_32b_temp00.yaml
+args: --n 1071 --output runs/adaptive_triple_specialist_temp00_full

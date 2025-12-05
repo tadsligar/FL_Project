@@ -1,0 +1,25 @@
+# Full Dataset - Main Paper Results
+# Core methods on full 1,071 questions at optimal temperature (0.3)
+# Estimated time: ~50-60 hours total
+# WARNING: This is a LONG run. Consider running on RunPod.
+
+experiments:
+  - name: "Zero-shot baseline @ temp 0.3 (FULL)"
+    script: test_zero_shot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 1071 --output runs/full_dataset/zero_shot_temp03_full
+
+  - name: "Single-shot CoT @ temp 0.3 (FULL)"
+    script: test_single_shot_cot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 1071 --output runs/full_dataset/single_shot_cot_temp03_full
+
+  - name: "Debate baseline @ temp 0.3 (FULL)"
+    script: test_debate_baseline_rerun.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 1071 --output runs/full_dataset/debate_baseline_temp03_full
+
+  - name: "Physician role debate @ temp 0.3 (FULL)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 1071 --output runs/full_dataset/debate_physician_role_temp03_full

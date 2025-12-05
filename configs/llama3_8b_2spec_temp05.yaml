@@ -1,0 +1,48 @@
+# Configuration for Llama3:8B - Phase 5a: 2 Specialists + Temperature 0.5
+# Tests if high temp benefit (Phase 2b: 47%) combines with fewer specialists benefit (Phase 3: 46%)
+# Expected: Could be optimal configuration (48-49%?)
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.5  # High exploration (uniform across all agents)
+max_output_tokens: 800
+
+planner:
+  top_k: 2  # Reduced from 5 to 2 specialists
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 2
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/llama3_8b_2spec_temp05"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

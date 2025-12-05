@@ -1,0 +1,47 @@
+# Configuration for using local Ollama models
+# This is cost-effective for development and testing
+
+model: "llama3:8b"  # or "llama3:70b", "mistral", "meditron"
+provider: "ollama"
+temperature: 0.3
+max_output_tokens: 800
+
+planner:
+  top_k: 5
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 5
+  max_retries: 1
+  timeout_seconds: 120  # Longer timeout for local models
+
+logging:
+  traces_dir: "runs"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 3  # Limit concurrent calls for local inference
+  rate_limit_per_minute: 60
+
+# Recommended Ollama models:
+# - llama3:8b - Good balance of speed and quality
+# - llama3:70b - Better quality, requires more RAM/GPU
+# - mistral:7b - Fast, good for development
+# - meditron - Medical domain-specific model
+# - medllama2 - Medical Llama variant

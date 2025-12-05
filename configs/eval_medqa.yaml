@@ -1,0 +1,25 @@
+# Configuration for MedQA evaluation
+
+# Inherit from default
+_base: "default.yaml"
+
+# Dataset parameters
+dataset:
+  path: "data/medqa_usmle_subset.json"
+  split: "test"
+  n_samples: 100
+  seed: 42
+  shuffle: true
+
+# Evaluation settings
+evaluation:
+  save_traces: true
+  compute_metrics:
+    - "accuracy"
+    - "avg_latency"
+    - "avg_tokens"
+  output_dir: "runs/medqa_eval"
+
+# Optional: override model for evaluation
+# model: "gpt-4"
+# temperature: 0.0  # More deterministic for eval

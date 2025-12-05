@@ -1,0 +1,48 @@
+# CRITICAL TEST: Unlimited Token Budget
+# Hypothesis: MAS underperforms due to JSON overhead consuming token budget
+# This test removes the constraint to see if MAS can leverage deeper reasoning
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.5  # Using best temperature from previous tests
+max_output_tokens: 4000  # 5x increase - effectively unlimited
+
+planner:
+  top_k: 4  # Using 4 specialists (good balance)
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 4
+  max_retries: 1
+  timeout_seconds: 180  # Increased for longer generations
+
+logging:
+  traces_dir: "runs/llama3_8b_unlimited_tokens"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

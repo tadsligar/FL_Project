@@ -1,0 +1,24 @@
+# Quick Validation Batch
+# Tests all methods on n=10 to verify everything works before long runs
+# Estimated time: ~30 minutes
+
+experiments:
+  - name: "Zero-shot baseline (n=10)"
+    script: test_zero_shot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 10 --output runs/batch_validation/zero_shot
+
+  - name: "Single-shot CoT (n=10)"
+    script: test_single_shot_cot.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 10 --output runs/batch_validation/single_shot_cot
+
+  - name: "Debate baseline (n=10)"
+    script: test_debate_baseline_rerun.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 10 --output runs/batch_validation/debate_baseline
+
+  - name: "Physician role debate (n=10)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 10 --output runs/batch_validation/debate_physician_role

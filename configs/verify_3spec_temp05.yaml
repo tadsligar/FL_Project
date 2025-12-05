@@ -1,0 +1,48 @@
+# VERIFICATION RUN: Phase 6c - 3 Specialists + Temperature 0.5
+# Original result: 45% accuracy
+# Re-running to verify reproducibility
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.5  # Best temperature
+max_output_tokens: 800
+
+planner:
+  top_k: 3  # Middle ground between 2 and 5
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 3
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/verify_3spec_temp05"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

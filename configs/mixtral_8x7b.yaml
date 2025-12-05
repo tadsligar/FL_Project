@@ -1,0 +1,64 @@
+# Configuration for Mixtral-8x7B - Excellent balance of speed and quality
+# Perfect fit for RTX 4090: ~13GB VRAM (no offloading needed!)
+
+model: "mixtral:8x7b"
+provider: "ollama"
+temperature: 0.3
+max_output_tokens: 800
+
+planner:
+  top_k: 5
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 5
+  max_retries: 1
+  timeout_seconds: 90  # Faster than 70B models
+
+logging:
+  traces_dir: "runs/mixtral_8x7b"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2  # Can run 2 in parallel on 4090
+  rate_limit_per_minute: 40
+
+# Performance notes:
+# - Mixtral uses Mixture of Experts (MoE) architecture
+# - Only 2 of 8 experts active per token (very efficient)
+# - Fits perfectly in 24GB VRAM (no CPU offloading)
+# - Expect 20-40 tokens/second on RTX 4090
+# - Total case time: 2-4 minutes (vs 5-10 min for 70B)
+# - For 100 MedQA evaluations: ~3-5 hours (vs 10-15 hours for 70B)
+# - Excellent at structured outputs (JSON) - great for multi-agent!
+# - Quality between Llama3:8B and Llama3:70B
+
+# Advantages over Llama3:70B for your project:
+# ✅ 3-4x faster (more experiments in 1 month)
+# ✅ No memory pressure (fits in VRAM)
+# ✅ Great for JSON outputs (fewer parsing errors)
+# ✅ Can run concurrent agents
+# ✅ More iterations = better prompt tuning

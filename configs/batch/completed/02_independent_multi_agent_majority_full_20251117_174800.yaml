@@ -1,0 +1,4 @@
+name: "Independent multi-agent with majority voting @ temp 0.0 (FULL)"
+script: "test_independent_multi_agent_majority.py"
+config: "configs/qwen25_32b_temp00.yaml"
+args: "--n 1071 --output runs/independent_multi_agent_majority_temp00_full"

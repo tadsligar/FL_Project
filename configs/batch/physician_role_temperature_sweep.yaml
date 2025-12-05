@@ -1,0 +1,29 @@
+# Physician Role Debate - Temperature Sensitivity Analysis
+# Tests physician role debate across all temperatures (n=100)
+# Estimated time: ~15 hours
+
+experiments:
+  - name: "Physician role @ temp 0.0 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp00.yaml
+    args: --n 100 --output runs/physician_temp_sweep/debate_physician_role_temp00
+
+  - name: "Physician role @ temp 0.1 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp01.yaml
+    args: --n 100 --output runs/physician_temp_sweep/debate_physician_role_temp01
+
+  - name: "Physician role @ temp 0.3 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp03.yaml
+    args: --n 100 --output runs/physician_temp_sweep/debate_physician_role_temp03
+
+  - name: "Physician role @ temp 0.5 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b.yaml
+    args: --n 100 --output runs/physician_temp_sweep/debate_physician_role_temp05
+
+  - name: "Physician role @ temp 0.7 (n=100)"
+    script: test_debate_physician_role.py
+    config: configs/qwen25_32b_temp07.yaml
+    args: --n 100 --output runs/physician_temp_sweep/debate_physician_role_temp07

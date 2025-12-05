@@ -1,0 +1,4 @@
+name: "Independent multi-agent with mixed temperatures (selector=0.0, specialist=0.3, reviewer=0.0) FULL"
+script: "test_independent_multi_agent_mixed_temp.py"
+config: "configs/qwen25_32b_temp00.yaml"
+args: "--n 1071 --selector-temp 0.0 --specialist-temp 0.3 --reviewer-temp 0.0 --output runs/independent_multi_agent_mixed_temp_full"

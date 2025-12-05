@@ -1,0 +1,29 @@
+# RunPod Qwen 2.5 32B Configuration - Temperature 0.3
+#
+# SETUP INSTRUCTIONS:
+# 1. Deploy Qwen2.5:32B on RunPod with vLLM template
+# 2. Get your pod endpoint URL (looks like: https://xxxxx-8000.proxy.runpod.net)
+# 3. Replace YOUR_POD_ID below with your actual pod ID
+# 4. Run tests: python scripts/test_debate_physician_role.py --config configs/runpod_qwen25_32b_temp03.yaml
+
+model: Qwen/Qwen2.5-32B-Instruct
+provider: vllm
+temperature: 0.3
+max_tokens: 4096
+top_p: 0.9
+
+vllm:
+  base_url: https://YOUR_POD_ID-8000.proxy.runpod.net
+  use_chat_api: true  # Use chat API for better instruct model performance
+  timeout: 300
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 4
+  max_retries: 1
+  timeout_seconds: 300
+
+retry:
+  max_attempts: 3
+  initial_delay: 1.0
+  max_delay: 10.0

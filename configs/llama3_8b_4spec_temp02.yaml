@@ -1,0 +1,48 @@
+# NEW TEST: Phase 9b - 4 Specialists + Temperature 0.2
+# Testing between 0.1 and 0.3 to find potential sweet spot
+# Hypothesis: Might balance determinism and exploration better
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.2  # Between 0.1 and 0.3
+max_output_tokens: 800
+
+planner:
+  top_k: 4
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 4
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/llama3_8b_4spec_temp02"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod:*)",
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(python -c:*)",
+      "Bash(python scripts/run_baseline_comparison.py:*)",
+      "Bash(python scripts/analyze_sequential_debate.py:*)",
+      "Bash(python scripts/analyze_agreement_patterns.py:*)",
+      "Bash(python scripts/compare_debate_methods.py:*)",
+      "Bash(python:*)",
+      "Bash(nul)",
+      "Bash(findstr:*)",
+      "Bash(del nul 2)",
+      "Bash(git add:*)",
+      "Bash(.gitignore)",
+      "Bash(git rm:*)",
+      "Bash($null)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

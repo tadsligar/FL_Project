@@ -1,0 +1,48 @@
+# Configuration for Llama3:8B - Phase 7b: 1 Specialist + Temperature 0.5 (Minimal MAS)
+# Tests if single specialist selection adds any value over single-LLM
+# Expected: Baseline to understand coordination overhead
+
+model: "llama3:8b"
+provider: "ollama"
+temperature: 0.5  # Best temperature
+max_output_tokens: 800
+
+planner:
+  top_k: 1  # Minimal multi-agent system
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 1
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/llama3_8b_1spec_temp05"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30

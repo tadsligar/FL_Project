@@ -1,0 +1,48 @@
+# Qwen2.5:32B Test - Baseline comparison
+# Testing whether a larger, more capable model shows MAS benefits
+# Hypothesis: Stronger base model might handle multi-agent coordination better
+
+model: "qwen2.5:32b"
+provider: "ollama"
+temperature: 0.5  # Using temp 0.5 as it worked well for llama3:8b
+max_output_tokens: 800
+
+planner:
+  top_k: 4  # Using 4 specialists (middle ground)
+  allow_generalist: true
+  emergency_red_flags:
+    - "syncope"
+    - "unstable"
+    - "diaphoresis"
+    - "hemoptysis"
+    - "chest pain"
+    - "altered mental status"
+    - "severe bleeding"
+    - "respiratory distress"
+    - "shock"
+  pediatric_signals:
+    - "child"
+    - "infant"
+    - "pediatric"
+    - "newborn"
+    - "adolescent"
+    - "years old"
+    - "months old"
+
+budgets:
+  max_agents_total: 10
+  max_specialists: 4
+  max_retries: 1
+  timeout_seconds: 120
+
+logging:
+  traces_dir: "runs/qwen25_32b"
+  backend: "jsonl"
+  level: "INFO"
+  save_full_prompts: true
+  save_raw_responses: true
+
+safety:
+  enable_guardrails: true
+  max_concurrent_calls: 2
+  rate_limit_per_minute: 30
