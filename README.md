@@ -1,523 +1,341 @@
-# Clinical MAS Planner
+# Multi-Agent Medical QA Reasoning System
 
-**Multi-Agent Diagnostic Reasoning System for Clinical Decision Support**
+**Exploring Advanced Reasoning Architectures for Medical Question Answering**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
-> **⚠️ EDUCATIONAL USE ONLY**
+> **⚠️ EDUCATIONAL & RESEARCH USE ONLY**
 > This is a research prototype for academic purposes only. **NOT** intended for clinical use, medical diagnosis, or patient care. Do not use this system to make medical decisions.
-
----
-
-## 🚀 Quick Start
-
-**System is ready to run!** See [`CURRENT_STATUS.md`](CURRENT_STATUS.md) for current setup status.
-
-**Run evaluation now:**
-```bash
-python scripts/run_baseline_comparison.py --n 10
-```
-
-**Documentation:**
-- 📋 [`CURRENT_STATUS.md`](CURRENT_STATUS.md) - What's ready and how to run
-- 🔧 [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md) - Common issues and solutions
-- 📖 [`READY_TO_RUN.md`](READY_TO_RUN.md) - Detailed setup guide
-- 🪟 [`INSTALL_OLLAMA_WINDOWS.md`](INSTALL_OLLAMA_WINDOWS.md) - Ollama installation
 
 ---
 
 ## Overview
 
-Clinical MAS Planner is an adaptive multi-agent diagnostic reasoning system inspired by [MAS-GPT](https://arxiv.org/abs/2305.15334). It orchestrates specialized AI agents to collaboratively analyze clinical cases and produce structured differential diagnoses.
+This project systematically evaluates multiple reasoning architectures for medical question answering on the MedQA-USMLE dataset. Through extensive experimentation, we identified **Progressive Temperature with Parallel Exploration** as the highest-performing approach, achieving **73.6% accuracy** on the full MedQA US Test Set (1,071 questions).
 
-### Key Features
+### Research Highlights
 
-- **Adaptive Specialist Selection**: Intelligently selects Top-K relevant medical specialties for each case
-- **Fixed Specialty Catalog**: Prevents hallucination with a curated list of 30+ medical/surgical specialties
-- **Structured Reasoning**: JSON-based agent outputs with explicit evidence, probabilities, and discriminators
-- **Deterministic & Bounded**: Configurable budgets, temperature control, and reproducible execution
-- **MedQA Evaluation**: Built-in evaluation harness for USMLE-style questions
-- **Production-Ready**: FastAPI REST API, CLI, Docker support, and comprehensive logging
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Clinical Case Input                     │
-│           (Question + Optional Multiple Choice)             │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    1. PLANNER AGENT                         │
-│  • Triage (ER / Pediatrics / Family Medicine)               │
-│  • Enumerate & Score ALL specialties from catalog           │
-│  • Select Top-5 specialties (max coverage, min redundancy)  │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                2. SPECIALIST AGENTS (Top-5)                 │
-│  Each specialist produces:                                  │
-│  • Differential diagnosis (up to 3 diagnoses)               │
-│  • Probabilities (sum ≤ 1.0)                                │
-│  • Evidence for/against each diagnosis                      │
-│  • Discriminating tests/findings                            │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  3. AGGREGATOR AGENT                        │
-│  • Merge specialist reports                                 │
-│  • Resolve conflicts                                        │
-│  • Produce final answer + ordered differential              │
-│  • Flag warnings                                            │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Final Decision                           │
-│           (Diagnosis + Justification + Traces)              │
-└─────────────────────────────────────────────────────────────┘
-```
+- **Best Method**: Progressive Temperature Parallel V4 - **73.6% accuracy**
+- **Dataset**: MedQA US Test Set (1,071 4-option multiple choice questions)
+- **Model**: Qwen 2.5 32B (Q4_K_M quantization via Ollama)
+- **Architectures Tested**: 8+ reasoning methods including multi-agent specialists, debate, self-consistency, and progressive temperature variants
+- **Key Finding**: High-temperature parallel exploration + deterministic synthesis outperforms traditional multi-agent architectures
 
 ---
 
-## Installation
+## Performance Summary
 
-### Prerequisites
+### Full Dataset Results (1,071 questions)
 
-- Python 3.11+
-- Poetry (recommended) or pip
-- **Option A**: API key for OpenAI or Anthropic
-- **Option B**: Local LLM setup (Ollama, llama.cpp, or vLLM) - **No API costs!**
+| Architecture | Accuracy | Tokens/Question | Cost vs Baseline |
+|--------------|----------|-----------------|------------------|
+| **Progressive Temp Parallel V4** | **73.6%** | 11,049 | 21.6x |
+| Progressive Temperature (baseline) | 72.2% | 7,089 | 13.8x |
+| Multi-Agent Specialist (temp=0.7) | 64.6% | 5,863 | 11.4x |
+| Multi-Agent Specialist (Synthesis) | 63.8% | 5,966 | 11.6x |
+| Multi-Agent Specialist (temp=0.3) | 63.4% | 6,154 | 12.0x |
+| Debate (Standard) | 61.7% | 13,291 | 25.9x |
+| Zero-Shot CoT | 57.8% | 513 | 1.0x |
 
-> 📖 **Detailed Setup Guide**: See [SETUP_GUIDE.md](SETUP_GUIDE.md) for:
-> - Downloading the full MedQA dataset (~12,000 questions)
-> - Setting up local LLMs (Ollama recommended)
-> - Model recommendations and cost comparison
+See [ARCHITECTURE_PERFORMANCE_SUMMARY.md](ARCHITECTURE_PERFORMANCE_SUMMARY.md) for detailed analysis.
 
-### Setup
+---
 
-1. **Clone the repository**:
+## Best Architecture: Progressive Temperature Parallel V4
 
-```bash
-git clone https://github.com/yourusername/clinical-mas-planner.git
-cd clinical-mas-planner
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│         STAGE 1: Parallel Exploration (N=5)             │
+│              Temperature = 1.0 (High Diversity)         │
+├─────────────────────────────────────────────────────────┤
+│  Agent 1  │  Agent 2  │  Agent 3  │  Agent 4  │ Agent 5 │
+│  Explore  │  Explore  │  Explore  │  Explore  │ Explore │
+│  diverse  │  diverse  │  diverse  │  diverse  │ diverse │
+│  hypotheses│ hypotheses│ hypotheses│ hypotheses│hypotheses│
+└─────┬──────┴─────┬─────┴─────┬─────┴─────┬─────┴────┬──┘
+      │            │           │           │          │
+      └────────────┴───────────┴───────────┴──────────┘
+                              │
+                              ▼
+            ┌─────────────────────────────────────┐
+            │  STAGE 2: Deterministic Synthesis   │
+            │        Temperature = 0.0            │
+            │  • Merge all 5 explorations         │
+            │  • Preserve all unique insights     │
+            │  • Flag critical findings           │
+            │  • Build comprehensive differential │
+            └─────────────────┬───────────────────┘
+                              │
+                              ▼
+            ┌─────────────────────────────────────┐
+            │   STAGE 3: Deterministic Decision   │
+            │        Temperature = 0.0            │
+            │  • Review comprehensive differential│
+            │  • Select best answer               │
+            │  • Provide justification            │
+            └─────────────────────────────────────┘
 ```
 
-2. **Install dependencies**:
+### Key Design Insights
 
-Using Poetry (recommended):
-```bash
-poetry install
-```
+**Why This Works:**
 
-Or using pip:
-```bash
-pip install -r requirements.txt  # (generate from poetry if needed)
-```
+1. **Parallel Exploration at High Temperature (1.0)**
+   - Generates diverse diagnostic hypotheses across 5 independent reasoning paths
+   - Captures rare diagnoses that might be missed by single-agent approaches
+   - Avoids premature convergence
 
-3. **Configure environment**:
+2. **Deterministic Synthesis (Temperature 0.0)**
+   - Faithfully preserves information from all explorations
+   - No information loss from stochastic sampling
+   - Consensus findings get appropriate emphasis
+   - Rare but critical flags are preserved
 
-```bash
-cp .env.example .env
-# Edit .env and add your API keys
-```
+3. **Fewer Stages, Less Error Accumulation**
+   - Only 7 LLM calls (vs 10 in earlier versions)
+   - Each stage has clear purpose: explore → synthesize → decide
+   - Minimal intermediate steps reduce compounding errors
 
-4. **Verify installation**:
+### Evolution: V1 → V2 → V4
 
-```bash
-poetry run pytest -q
-```
+| Version | Architecture | Accuracy | Key Difference |
+|---------|-------------|----------|----------------|
+| V1 | 5×1.0 → merge@0.5 → 4-stage annealing | 69.0% | Stochastic merge lost information |
+| V2 | 5×1.0 → merge@0.5 (improved prompt) → annealing | 71.3% | Better prompt, still lossy merge |
+| **V4** | **5×1.0 → merge@0.0 → final@0.0** | **73.6%** | **Deterministic = faithful synthesis** |
+
+**Key Breakthrough**: Moving from temperature 0.5 to 0.0 for synthesis was critical (+2.3 points from V2→V4)
+
+See [paper_sections/progressive_temperature_parallel.md](paper_sections/progressive_temperature_parallel.md) for detailed analysis.
 
 ---
 
 ## Quick Start
 
-### CLI Usage
+### Prerequisites
 
-**Run a single case**:
+- Python 3.11+
+- [Ollama](https://ollama.ai/) for local LLM inference
+- 16GB+ RAM recommended for Qwen 2.5 32B
 
-```bash
-poetry run mas run \
-  --question "A 65-year-old man presents with chest pain radiating to the left arm, diaphoresis, and nausea." \
-  --options "A. GERD||B. Acute MI||C. PE||D. MSK pain"
-```
-
-**Run planner only**:
+### Installation
 
 ```bash
-poetry run mas plan --question "Patient with acute chest pain"
+# Clone repository
+git clone https://github.com/tadsligar/FL_Project.git
+cd FL_Project
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Pull Qwen 2.5 32B model
+ollama pull qwen2.5:32b
 ```
 
-**Evaluate on MedQA subset**:
+### Run Evaluation
 
+**Progressive Temperature Parallel V4** (best method):
 ```bash
-poetry run mas eval --config configs/eval_medqa.yaml --n 100
+python scripts/test_progressive_temperature_parallel.py \
+  --n 1071 \
+  --parallel 5 \
+  --config configs/qwen25_32b.yaml
 ```
 
-### API Usage
-
-**Start the server**:
-
+**Baseline comparison**:
 ```bash
-poetry run mas serve --port 8000
+python scripts/run_baseline_comparison.py --n 100
 ```
 
-**API Endpoints**:
-
-- `POST /run` - Run complete case
-- `POST /plan` - Run planner only
-- `POST /consult` - Run specialist consultations
-- `POST /aggregate` - Aggregate specialist reports
-- `POST /eval/medqa` - Run MedQA evaluation
-
-**Example API call**:
-
+**Single question test**:
 ```bash
-curl -X POST "http://localhost:8000/run" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "65yo man with chest pain radiating to arm",
-    "options": ["A. GERD", "B. MI", "C. PE", "D. MSK"]
-  }'
+python scripts/test_progressive_temperature_parallel.py \
+  --n 1 \
+  --parallel 5 \
+  --config configs/qwen25_32b.yaml
 ```
 
-API documentation: `http://localhost:8000/docs`
+---
 
-### Docker Usage
+## Architectures Tested
 
-**Build and run**:
+### 1. Progressive Temperature (Single-Agent Baseline)
 
-```bash
-cd docker
-docker-compose up --build
+**Temperature schedule**: 1.0 → 0.7 → 0.5 → 0.3 → 0.0
+
+**Result**: 72.2% accuracy (773/1071), 7,089 tokens/question
+
+Single agent reasons through 5 stages with decreasing temperature for gradual exploration→exploitation.
+
+### 2. Progressive Temperature Parallel (Multi-Path)
+
+**Best variant**: V4 with 5×1.0 parallel → merge@0.0 → final@0.0
+
+**Result**: 73.6% accuracy (788/1071), 11,049 tokens/question
+
+Five parallel explorations at high temperature, deterministic synthesis.
+
+### 3. Multi-Agent Specialist Architecture
+
+**Architecture**: Planner → 5 Specialists → Aggregator
+
+**Best variant**: Temperature 0.7
+
+**Result**: 64.6% accuracy (692/1071), 5,863 tokens/question
+
+Inspired by MAS-GPT, selects specialized medical experts for each case.
+
+### 4. Debate Methods
+
+**Architecture**: Two agents debate iteratively
+
+**Result**: 61.7% accuracy (660/1071), 13,291 tokens/question
+
+Adversarial reasoning with iterative refinement. Poor cost-effectiveness.
+
+### 5. Zero-Shot Chain-of-Thought
+
+**Result**: 57.8% accuracy, 513 tokens/question
+
+Baseline single-shot reasoning.
+
+---
+
+## Repository Structure
+
+```
+FL_Project/
+├── src/
+│   ├── baselines/
+│   │   ├── progressive_temperature.py         # Single-agent baseline
+│   │   ├── progressive_temperature_parallel.py # Parallel exploration
+│   │   ├── multi_agent.py                     # MAS-GPT-style specialists
+│   │   └── debate.py                          # Two-agent debate
+│   ├── llm_client.py                          # Ollama client
+│   ├── config.py                              # Configuration management
+│   └── medqa.py                               # MedQA dataset loader
+├── scripts/
+│   ├── test_progressive_temperature_parallel.py # Run parallel experiments
+│   ├── test_progressive_temperature.py          # Run baseline
+│   ├── run_baseline_comparison.py               # Compare all methods
+│   ├── analyze_progressive_temp_v4.py           # V4 analysis
+│   └── summarize_all_architectures.py           # Performance summary
+├── configs/
+│   └── qwen25_32b.yaml                        # Qwen 2.5 32B config
+├── paper_sections/
+│   ├── progressive_temperature_parallel.md    # V4 detailed writeup
+│   └── mas_architectures_overview.md          # Architecture comparison
+├── runs/                                      # Experiment results
+│   ├── progressive_temperature_parallel_v4/   # Best method runs
+│   ├── progressive_temperature_full/          # Baseline runs
+│   └── multi_agent_specialist_*/              # Specialist architecture runs
+├── ARCHITECTURE_PERFORMANCE_SUMMARY.md        # All results table
+├── TOKEN_USAGE_SUMMARY.md                     # Cost analysis
+└── README.md                                  # This file
 ```
 
-Access API at `http://localhost:8000`
+---
+
+## Analysis & Results Documents
+
+- **[ARCHITECTURE_PERFORMANCE_SUMMARY.md](ARCHITECTURE_PERFORMANCE_SUMMARY.md)** - Complete performance table for all architectures
+- **[TOKEN_USAGE_SUMMARY.md](TOKEN_USAGE_SUMMARY.md)** - Token usage and cost-effectiveness analysis
+- **[PROGRESSIVE_TEMP_V4_ANALYSIS.md](PROGRESSIVE_TEMP_V4_ANALYSIS.md)** - V4 stability analysis across multiple runs
+- **[paper_sections/progressive_temperature_parallel.md](paper_sections/progressive_temperature_parallel.md)** - Detailed V4 methodology and evolution
+- **[paper_sections/mas_architectures_overview.md](paper_sections/mas_architectures_overview.md)** - MAS-GPT architecture comparison
 
 ---
 
 ## Configuration
 
-Configuration is managed via YAML files in `configs/`:
-
-**`configs/default.yaml`**:
+**Model Configuration** (`configs/qwen25_32b.yaml`):
 
 ```yaml
-model: "gpt-4o-mini"
-provider: "openai"
-temperature: 0.3
-max_output_tokens: 800
-
-planner:
-  top_k: 5
-  emergency_red_flags: ["syncope", "unstable", "chest pain"]
-
-budgets:
-  max_agents_total: 10
-  max_specialists: 5
-  max_retries: 1
-
-logging:
-  traces_dir: "runs"
-  backend: "jsonl"
+model: "qwen2.5:32b"
+provider: "ollama"
+base_url: "http://localhost:11434"
+temperature: 1.0  # Overridden per stage
+max_output_tokens: 2048
+timeout: 300
 ```
 
-Override via environment variables or custom YAML files.
+**Progressive Temperature Parallel Settings**:
+- Parallel explorations: 5
+- Exploration temperature: 1.0
+- Merge temperature: 0.0 (deterministic)
+- Final decision temperature: 0.0 (deterministic)
 
 ---
 
-## Specialty Catalog
+## Key Research Findings
 
-The system uses a **fixed catalog** of 30+ specialties to prevent hallucination:
+### 1. Deterministic Synthesis is Critical
 
-### Generalists
-- Emergency Medicine
-- Pediatrics
-- Family/Internal Medicine
+Early versions (V1, V2) used temperature 0.5 for merging parallel explorations, which caused information loss. Moving to temperature 0.0 (deterministic argmax) improved accuracy by 2.3 percentage points.
 
-### Medical Specialties
-- Cardiology, Neurology, Psychiatry, Dermatology, Ophthalmology
-- ENT, OB/GYN, Endocrinology, Gastroenterology, Hematology
-- Infectious Disease, Nephrology, Oncology, Pulmonology, Rheumatology
-- Geriatrics, Allergy/Immunology, Sleep Medicine, Urology, Sports Medicine
+### 2. Temperature Serves Different Purposes
 
-### Surgical Specialties
-- General Surgery, Orthopedic Surgery, Vascular Surgery
-- Plastic Surgery, Thoracic Surgery
+- **High temp (1.0) for exploration**: Generate diverse hypotheses
+- **Zero temp (0.0) for consolidation**: Preserve all signals without noise
 
-Each specialty has metadata:
-- `emergency_weight`, `pediatric_weight`, `adult_weight`
-- `procedural_signal`
-- `keywords`
+### 3. Parallel > Sequential for Medical Reasoning
 
-See `src/catalog.py` for full definitions.
+Parallel exploration at high temperature captured diagnostic considerations that single-agent progressive temperature missed, despite the baseline being strong (72.2%).
+
+### 4. Multi-Agent Specialists Underperformed Expectations
+
+Despite intuitive appeal, specialist-aggregator architecture (inspired by MAS-GPT) achieved only 64.6% accuracy. Hypothesis: Fixed role assignments limit flexibility compared to parallel exploration.
+
+### 5. Debate Methods Have Poor ROI
+
+Debate achieved 61.7% accuracy at 25.9x baseline cost - worse performance than progressive temperature at higher computational cost.
 
 ---
 
-## Prompts
+## Dataset
 
-Agent prompts are stored in `src/prompts/`:
+**MedQA-USMLE US Test Set**
 
-### Planner Prompt (`planner.txt`)
+- 1,071 4-option multiple choice questions
+- USMLE-style clinical vignettes
+- Located at: `data/medqa_us_test_4opt.json`
 
-```
-You are a Clinical Generalist Planner.
-
-Tasks:
-1. Choose triage generalist (ER / Pediatrics / Family Medicine)
-2. Score ALL specialties from the fixed catalog
-3. Select Top-5 specialties maximizing coverage
-
-Output: JSON matching PlannerResult schema
-```
-
-### Specialist Prompt (`specialist.txt`)
-
-```
-You are a {specialty_display_name} Specialist.
-
-Task: Produce up to 3 differential diagnoses with:
-- Probability (0-1, sum ≤ 1)
-- Evidence for/against
-- Discriminating tests
-
-Output: JSON matching SpecialistReport schema
-```
-
-### Aggregator Prompt (`aggregator.txt`)
-
-```
-You are a Generalist Aggregator.
-
-Task: Merge specialist reports into:
-- Final answer
-- Ordered differential
-- Justification
-- Warnings
-
-Output: JSON matching FinalDecision schema
-```
-
-See full prompts in `src/prompts/`.
-
----
-
-## Evaluation
-
-### MedQA Integration
-
-Evaluate on MedQA-USMLE questions:
-
-```bash
-poetry run mas eval --config configs/eval_medqa.yaml --n 100
-```
-
-**Output**:
-- Accuracy: % correct
-- Avg latency per case
-- Avg token usage
-- Trace files for qualitative analysis
-
-**Mock Data**: If MedQA dataset not available, uses built-in mock samples for testing.
-
-### Traces
-
-All executions are logged to `runs/` as JSONL files:
-
-```json
-{
-  "trace_id": "uuid",
-  "question": "...",
-  "planner_trace": {...},
-  "specialist_traces": [{...}, {...}],
-  "aggregator_trace": {...},
-  "final_decision": {...},
-  "is_correct": true,
-  "total_latency_seconds": 12.3
-}
-```
-
-**Export traces**:
-
-```bash
-python scripts/export_traces.py runs/medqa_eval --csv results.csv --summary summary.json
-```
-
----
-
-## Development
-
-### Running Tests
-
-```bash
-# All tests
-poetry run pytest
-
-# Specific test file
-poetry run pytest tests/test_planner.py -v
-
-# With coverage
-poetry run pytest --cov=src --cov-report=html
-```
-
-### Code Quality
-
-```bash
-# Format code
-poetry run black src/ tests/
-
-# Lint
-poetry run ruff check src/ tests/
-
-# Type checking
-poetry run mypy src/
-```
-
-### Adding a New Specialty
-
-1. Edit `src/catalog.py`
-2. Add to `SPECIALTY_CATALOG` with metadata
-3. Run tests: `pytest tests/test_catalog.py`
-
----
-
-## Safety & Ethics
-
-### Guardrails
-
-The system includes safety checks (see `src/safety.py`):
-
-- **PHI Detection**: Basic heuristics for SSN, MRN, emails, phone numbers
-- **Specialty Validation**: Rejects hallucinated specialties not in catalog
-- **Probability Validation**: Ensures probabilities sum to ≤ 1.0
-- **Disclaimer**: Displayed on all CLI/API interactions
-
-### Limitations
-
-- **Research Prototype**: Not validated for clinical use
-- **No Real-Time Data**: Does not access patient records or real-time labs
-- **No Retrieval**: Does not query PubMed or medical databases (future work)
-- **Limited Scope**: Optimized for USMLE-style questions, not complex real-world cases
-
----
-
-## Project Structure
-
-```
-clinical-mas-planner/
-├── src/
-│   ├── app.py                 # FastAPI + CLI entry point
-│   ├── config.py              # Configuration management
-│   ├── catalog.py             # Fixed specialty catalog
-│   ├── schemas.py             # Pydantic models
-│   ├── llm_client.py          # LLM abstraction (OpenAI/Anthropic/Mock)
-│   ├── planner.py             # Planner agent
-│   ├── specialists.py         # Specialist agents
-│   ├── aggregator.py          # Aggregator agent
-│   ├── orchestration.py       # Execution coordinator
-│   ├── medqa.py               # MedQA evaluation harness
-│   ├── logging_utils.py       # Trace storage
-│   ├── safety.py              # Safety guardrails
-│   └── prompts/               # Agent prompt templates
-├── tests/                     # Pytest test suite
-├── configs/                   # YAML configuration files
-├── scripts/                   # Utility scripts
-├── docker/                    # Dockerfile & docker-compose
-├── runs/                      # Output traces (created at runtime)
-├── pyproject.toml             # Poetry dependencies
-├── README.md                  # This file
-└── LICENSE                    # MIT License
-```
+Questions test clinical reasoning across medical specialties, requiring integration of patient history, physical findings, and diagnostic workup.
 
 ---
 
 ## Future Work
 
-### Near-Term Enhancements
+### Near-Term
 
-- [ ] **Retrieval Augmentation**: Integrate PubMed abstracts or UpToDate snippets
-- [ ] **Concurrency**: Run specialist agents in parallel (asyncio)
-- [ ] **SQLite Backend**: Structured trace storage with query support
-- [ ] **Streamlit Viewer**: Interactive trace exploration UI
-- [ ] **Ablation Studies**: Compare enumerate+select vs direct Top-5 selection
+- [ ] Majority voting analysis across 3 runs of V4
+- [ ] Ablation studies: impact of number of parallel agents (3, 5, 7, 10)
+- [ ] Temperature sweep for merge stage
+- [ ] Hybrid: V4 parallel exploration + specialist consultation
 
 ### Research Directions
 
-- [ ] **Multi-Turn Dialogue**: Iterative questioning and refinement
-- [ ] **Uncertainty Quantification**: Confidence intervals on diagnoses
-- [ ] **Explainability**: Natural language justifications for specialist selection
-- [ ] **Human-in-the-Loop**: Interactive specialist selection and feedback
-- [ ] **Multi-Modal Input**: Imaging, ECG, lab results
-
-### Publication Targets
-
-- Academic conferences: MLHC, AMIA, NeurIPS (Health)
-- Journals: JAMIA, npj Digital Medicine, NEJM AI
-- Focus: Novel multi-agent architecture, specialty selection strategies, ablation studies
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-**Import errors**:
-```bash
-# Ensure you're in the project root and using Poetry
-poetry install
-poetry shell
-```
-
-**API key errors**:
-```bash
-# Check .env file
-cat .env | grep API_KEY
-
-# Or set directly
-export OPENAI_API_KEY="your-key"
-```
-
-**JSON parsing errors**:
-- Check `runs/` for trace files with error details
-- Enable `save_full_prompts: true` in config for debugging
-- Use `provider: mock` for testing without API calls
-
-**Tests failing**:
-```bash
-# Reset config between tests
-poetry run pytest --cache-clear
-```
-
----
-
-## Contributing
-
-We welcome contributions! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+- [ ] Retrieval augmentation (PubMed, UpToDate)
+- [ ] Multi-turn reasoning with intermediate questions
+- [ ] Uncertainty quantification
+- [ ] Analysis of disagreement patterns
+- [ ] Generalization to other medical QA datasets (MedMCQA, PubMedQA)
 
 ---
 
 ## Citation
 
-If you use this work in your research, please cite:
+If you use this work, please cite:
 
 ```bibtex
-@software{clinical_mas_planner,
-  title = {Clinical MAS Planner: Multi-Agent Diagnostic Reasoning System},
-  author = {Your Name},
-  year = {2025},
-  url = {https://github.com/yourusername/clinical-mas-planner}
+@misc{fl_project_2025,
+  title={Progressive Temperature with Parallel Exploration for Medical Question Answering},
+  author={Sligar, Tad},
+  year={2025},
+  url={https://github.com/tadsligar/FL_Project}
 }
 ```
 
@@ -541,11 +359,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-For questions or collaboration:
-
-- GitHub Issues: [https://github.com/yourusername/clinical-mas-planner/issues](https://github.com/yourusername/clinical-mas-planner/issues)
-- Email: your.email@example.com
+- GitHub: [@tadsligar](https://github.com/tadsligar)
+- Repository: [https://github.com/tadsligar/FL_Project](https://github.com/tadsligar/FL_Project)
 
 ---
 
-**Remember**: This is an educational tool. Always consult qualified healthcare professionals for medical advice.
+**Disclaimer**: This is an educational research tool. Always consult qualified healthcare professionals for medical advice and diagnosis.
