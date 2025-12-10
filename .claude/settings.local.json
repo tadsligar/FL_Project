@@ -16,7 +16,8 @@
       "Bash(git add:*)",
       "Bash(.gitignore)",
       "Bash(git rm:*)",
-      "Bash($null)"
+      "Bash($null)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
