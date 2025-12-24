@@ -17,7 +17,8 @@
       "Bash(.gitignore)",
       "Bash(git rm:*)",
       "Bash($null)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:hpc.auburn.edu)"
     ],
     "deny": [],
     "ask": []
