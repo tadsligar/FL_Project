@@ -174,19 +174,19 @@ Provide a structured analysis:
 
 Be concise but thorough."""
 
-        response = self.llm.generate(
+        response = self.llm.complete(
             prompt=prompt,
-            temperature=0.3,  # Lower temp for factual analysis
+            temperature=0.7,  # Moderate temp for broad problem understanding
             max_tokens=self.config.max_output_tokens
         )
 
         node_id = self.add_node(
             NodeType.INITIAL,
-            response['content'],
+            response.content,
             metadata={'question': question}
         )
 
-        return node_id, response.get('tokens', 0)
+        return node_id, response.tokens_used or 0
 
     def _generate_hypotheses(self, initial_id: str, question: str,
                             options_text: str, num_hypotheses: int = 4) -> tuple:
@@ -216,15 +216,15 @@ Format as JSON:
   "D": {{"reasoning": "...", "confidence": 0.X}}
 }}"""
 
-        response = self.llm.generate(
+        response = self.llm.complete(
             prompt=prompt,
-            temperature=0.8,  # Higher temp for diverse hypotheses
+            temperature=1.0,  # Maximum temp for diverse hypotheses (matches V4 Parallel)
             max_tokens=self.config.max_output_tokens
         )
 
         # Parse hypotheses
         try:
-            hypotheses = json.loads(response['content'])
+            hypotheses = json.loads(response.content)
         except:
             # Fallback: create one hypothesis per option
             hypotheses = {chr(65+i): {"reasoning": "Generated hypothesis", "confidence": 0.25}
@@ -241,7 +241,7 @@ Format as JSON:
             self.add_edge(initial_id, h_id, 'generates')
             hypothesis_ids.append(h_id)
 
-        return hypothesis_ids, response.get('tokens', 0)
+        return hypothesis_ids, response.tokens_used or 0
 
     def _gather_evidence(self, hypothesis_ids: List[str], question: str,
                         options_text: str) -> tuple:
@@ -267,20 +267,20 @@ Analyze:
 
 Be specific and evidence-based."""
 
-            response = self.llm.generate(
+            response = self.llm.complete(
                 prompt=prompt,
-                temperature=0.5,
+                temperature=0.7,  # Higher temp for thorough evidence exploration
                 max_tokens=self.config.max_output_tokens
             )
 
             e_id = self.add_node(
                 NodeType.EVIDENCE,
-                response['content'],
+                response.content,
                 metadata={'hypothesis_id': h_id, 'option': option}
             )
             self.add_edge(h_id, e_id, 'supports')
             evidence_map[h_id] = e_id
-            total_tokens += response.get('tokens', 0)
+            total_tokens += response.tokens_used or 0
 
         return evidence_map, total_tokens
 
@@ -326,15 +326,15 @@ Provide:
 Format as JSON:
 {{"refined_reasoning": "...", "confidence": 0.X, "key_factors": ["..."]}}"}}"""
 
-                response = self.llm.generate(
+                response = self.llm.complete(
                     prompt=prompt,
-                    temperature=0.4,
+                    temperature=0.5,  # Balanced temp for refinement with cross-pollination
                     max_tokens=self.config.max_output_tokens
                 )
 
                 r_id = self.add_node(
                     NodeType.REFINEMENT,
-                    response['content'],
+                    response.content,
                     metadata={'original_hypothesis': h_id, 'option': hypothesis.metadata.get('option')}
                 )
                 self.add_edge(h_id, r_id, 'refines')
@@ -342,7 +342,7 @@ Format as JSON:
                     self.add_edge(evidence_id, r_id, 'informs')
 
                 current_refined.append(r_id)
-                total_tokens += response.get('tokens', 0)
+                total_tokens += response.tokens_used or 0
 
             refined_ids = current_refined
 
@@ -375,7 +375,7 @@ Provide:
 
 Be deterministic and evidence-based."""
 
-        response = self.llm.generate(
+        response = self.llm.complete(
             prompt=prompt,
             temperature=0.0,  # Deterministic aggregation
             max_tokens=self.config.max_output_tokens
@@ -383,13 +383,13 @@ Be deterministic and evidence-based."""
 
         agg_id = self.add_node(
             NodeType.AGGREGATION,
-            response['content']
+            response.content
         )
 
         for r_id in refined_ids:
             self.add_edge(r_id, agg_id, 'aggregates')
 
-        return agg_id, response.get('tokens', 0)
+        return agg_id, response.tokens_used or 0
 
     def _make_decision(self, agg_id: str, question: str, options_text: str) -> tuple:
         """Step 6: Make final deterministic decision"""
@@ -412,7 +412,7 @@ Provide ONLY:
 Format as JSON:
 {{"answer": "X", "justification": "..."}}"}}"""
 
-        response = self.llm.generate(
+        response = self.llm.complete(
             prompt=prompt,
             temperature=0.0,  # Fully deterministic
             max_tokens=512
@@ -420,12 +420,12 @@ Format as JSON:
 
         # Parse decision
         try:
-            decision = json.loads(response['content'])
+            decision = json.loads(response.content)
             answer = decision.get('answer', 'A')
-            justification = decision.get('justification', response['content'])
+            justification = decision.get('justification', response.content)
         except:
             # Fallback: extract first letter
-            content = response['content']
+            content = response.content
             answer = next((c for c in content if c in 'ABCD'), 'A')
             justification = content
 
@@ -436,7 +436,7 @@ Format as JSON:
         )
         self.add_edge(agg_id, decision_id, 'concludes')
 
-        return decision_id, answer, justification, response.get('tokens', 0)
+        return decision_id, answer, justification, response.tokens_used or 0
 
     def _export_graph(self) -> Dict[str, Any]:
         """Export graph structure for analysis/visualization"""

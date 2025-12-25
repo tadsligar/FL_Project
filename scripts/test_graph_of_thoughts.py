@@ -13,12 +13,12 @@ from tqdm import tqdm
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.config import Config
-from src.llm_client import LLMClient
-from src.medqa import load_medqa
+from src.llm_client import create_llm_client
+from src.medqa import load_medqa_subset
 from src.baselines.graph_of_thoughts import run_graph_of_thoughts
 
 
-def test_graph_of_thoughts(n_questions: int, config_path: str, output_dir: str = None):
+def test_graph_of_thoughts(n_questions: int, config_path: str, output_dir: str = None, resume_from: str = None):
     """Test Graph of Thoughts on MedQA"""
 
     print("=" * 60)
@@ -35,34 +35,61 @@ def test_graph_of_thoughts(n_questions: int, config_path: str, output_dir: str =
 
     # Load dataset
     print(f"Loading MedQA dataset ({n_questions} questions)...")
-    questions = load_medqa(n_questions)
+    questions = load_medqa_subset(path="data/medqa_us_test_4opt.json", n=n_questions)
     print(f"  Loaded {len(questions)} questions")
     print()
 
     # Initialize LLM
     print("Initializing LLM client...")
-    llm_client = LLMClient(config)
+    llm_client = create_llm_client(config)
     print("  [OK] Client ready")
     print()
 
-    # Setup output
-    if output_dir is None:
-        output_dir = f"runs/graph_of_thoughts/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
+    # Setup output (or use resume path)
+    if resume_from:
+        output_path = Path(resume_from)
+        if not output_path.exists():
+            print(f"ERROR: Resume path not found: {resume_from}")
+            return
+        print(f"Resuming from: {output_path}")
+    else:
+        if output_dir is None:
+            output_dir = f"runs/graph_of_thoughts/{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
 
     print(f"Output directory: {output_path}")
     print()
 
-    # Run evaluation
+    # Results storage
     results = []
     correct_count = 0
+    checkpoint_file = output_path / "checkpoint.json"
 
+    # Try to load from checkpoint if it exists
+    start_idx = 0
+    if checkpoint_file.exists():
+        try:
+            with open(checkpoint_file, "r") as f:
+                results = json.load(f)
+                start_idx = len(results)
+                correct_count = sum(1 for r in results if r.get('is_correct', False))
+                print(f"Resuming from checkpoint: {start_idx}/{len(questions)} questions completed")
+                print(f"Current accuracy: {correct_count}/{start_idx} = {correct_count/start_idx*100:.1f}%")
+                print()
+        except Exception as e:
+            print(f"Could not load checkpoint: {e}. Starting fresh.")
+            print()
+
+    # Run evaluation
     print("Running Graph of Thoughts evaluation...")
     print()
 
     for i, q in enumerate(tqdm(questions, desc="Evaluating")):
+        # Skip already processed questions
+        if i < start_idx:
+            continue
+
         question_text = q['question']
         options = q['options']
         correct_answer = q['answer']
@@ -164,13 +191,16 @@ def main():
                        help='Path to config file')
     parser.add_argument('--output', type=str, default=None,
                        help='Output directory')
+    parser.add_argument('--resume', type=str, default=None,
+                       help='Resume from checkpoint directory')
 
     args = parser.parse_args()
 
     test_graph_of_thoughts(
         n_questions=args.n,
         config_path=args.config,
-        output_dir=args.output
+        output_dir=args.output,
+        resume_from=args.resume
     )
 
 

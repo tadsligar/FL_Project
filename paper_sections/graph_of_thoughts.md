@@ -23,10 +23,10 @@ Traditional approaches (Chain-of-Thought, Tree-of-Thoughts) force reasoning into
 
 | Node Type | Purpose | Temperature |
 |-----------|---------|-------------|
-| INITIAL | Problem understanding | 0.3 (factual) |
-| HYPOTHESIS | Diagnostic hypotheses (one per option) | 0.8 (diverse) |
-| EVIDENCE | Evidence for/against each hypothesis | 0.5 (balanced) |
-| REFINEMENT | Updated hypotheses after evidence | 0.4 (focused) |
+| INITIAL | Problem understanding | 0.7 (broad) |
+| HYPOTHESIS | Diagnostic hypotheses (one per option) | 1.0 (max diversity) |
+| EVIDENCE | Evidence for/against each hypothesis | 0.7 (thorough) |
+| REFINEMENT | Updated hypotheses after evidence | 0.5 (balanced) |
 | AGGREGATION | Synthesis of all reasoning | 0.0 (deterministic) |
 | DECISION | Final answer selection | 0.0 (deterministic) |
 
@@ -98,13 +98,13 @@ This cross-pollination allows each hypothesis to be refined in the context of al
 
 ### 2. Temperature Scheduling Per Node Type
 
-Different reasoning stages require different exploration/exploitation trade-offs:
+"Hot start, cold finish" strategy optimized per operation type:
 
-- **High temperature (0.8)** for hypothesis generation → diverse options
-- **Medium temperature (0.4-0.5)** for evidence and refinement → balanced
-- **Zero temperature (0.0)** for aggregation and decision → deterministic
+- **High temperature (0.7-1.0)** for initialization and hypothesis generation → maximum diversity
+- **Medium temperature (0.5-0.7)** for evidence and refinement → balanced exploration
+- **Zero temperature (0.0)** for aggregation and decision → deterministic synthesis
 
-This is more sophisticated than progressive temperature's linear schedule.
+**Key insight:** Temperature 1.0 for hypothesis generation matches Progressive Temperature Parallel V4's successful exploration strategy, but applied to graph structure with cross-pollination.
 
 ### 3. Explicit Graph Structure
 
