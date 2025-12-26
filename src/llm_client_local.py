@@ -193,11 +193,13 @@ class VLLMClient(LLMClient):
         super().__init__(config)
         # Get base_url from config or parameter
         if base_url is None:
-            base_url = getattr(config, 'vllm', {}).get('base_url', 'http://localhost:8000')
+            vllm_config = getattr(config, 'vllm', None)
+            base_url = vllm_config.base_url if vllm_config else 'http://localhost:8000'
         self.base_url = base_url.rstrip("/")
 
         # Check if we should use chat API (better for instruct models)
-        self.use_chat_api = getattr(config, 'vllm', {}).get('use_chat_api', False)
+        vllm_config = getattr(config, 'vllm', None)
+        self.use_chat_api = vllm_config.use_chat_api if vllm_config else False
 
     def complete(self, prompt: str, **kwargs) -> LLMResponse:
         """Generate completion using vLLM OpenAI-compatible API."""

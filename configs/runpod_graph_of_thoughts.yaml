@@ -1,0 +1,35 @@
+# RunPod Configuration for Graph of Thoughts
+# Deploy on RunPod: https://www.runpod.io/
+# Recommended GPU: RTX A6000 (48GB VRAM) or A100 80GB
+# Model: Qwen 2.5 32B Instruct
+
+model: Qwen/Qwen2.5-32B-Instruct
+provider: vllm
+temperature: 0.7  # Default, overridden per stage in GoT
+max_tokens: 2048  # Sufficient for medical reasoning
+top_p: 0.9
+
+vllm:
+  base_url: http://195.26.233.80:8000
+  use_chat_api: true  # Use chat completions API (better for instruct models)
+  timeout: 600  # 10 minutes - GoT has many sequential calls
+
+budgets:
+  max_agents_total: 20  # GoT creates ~15 nodes per question
+  max_specialists: 4
+  max_retries: 2
+  timeout_seconds: 600  # Match vLLM timeout
+
+retry:
+  max_attempts: 3
+  initial_delay: 1.0
+  max_delay: 10.0
+
+# Graph of Thoughts specific settings
+# Temperature schedule is handled by the GoT implementation:
+# - INITIAL: 0.7 (broad problem understanding)
+# - HYPOTHESIS: 1.0 (maximum diversity)
+# - EVIDENCE: 0.7 (thorough exploration)
+# - REFINEMENT: 0.5 (balanced cross-pollination)
+# - AGGREGATION: 0.0 (deterministic synthesis)
+# - DECISION: 0.0 (deterministic final answer)

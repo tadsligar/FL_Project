@@ -18,7 +18,8 @@
       "Bash(git rm:*)",
       "Bash($null)",
       "Bash(git commit:*)",
-      "WebFetch(domain:hpc.auburn.edu)"
+      "WebFetch(domain:hpc.auburn.edu)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
