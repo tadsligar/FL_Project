@@ -84,6 +84,43 @@ def convert_to_format():
     data_dir = Path("data")
     data_dir.mkdir(exist_ok=True)
 
+    # Find where the data actually extracted to
+    print("\nSearching for extracted files...")
+    possible_paths = [
+        "data_clean/questions/US",
+        "MedQA/data_clean/questions/US",
+        "questions/US",
+        "US",
+    ]
+
+    base_path = None
+    for p in possible_paths:
+        path = Path(p)
+        if path.exists():
+            print(f"Found data at: {p}")
+            base_path = path
+            break
+
+    if not base_path:
+        # List what we actually have
+        print("\nExtracted contents:")
+        for item in Path(".").iterdir():
+            if item.is_dir():
+                print(f"  {item}/")
+                # Check one level deep
+                for subitem in item.iterdir():
+                    print(f"    {subitem.name}")
+                    if subitem.name == "questions":
+                        base_path = subitem / "US"
+                        print(f"Found data at: {base_path}")
+                        break
+                if base_path:
+                    break
+
+    if not base_path:
+        print("\n✗ Could not find MedQA data files in extracted archive")
+        return
+
     # Process each split
     configs = [
         ("test", "4_options", "test_4opt"),
@@ -92,7 +129,7 @@ def convert_to_format():
     ]
 
     for split, opt_type, output_name in configs:
-        input_file = Path(f"data_clean/questions/US/{opt_type}/{split}.jsonl")
+        input_file = base_path / opt_type / f"{split}.jsonl"
 
         if not input_file.exists():
             print(f"Warning: {input_file} not found, skipping")
@@ -132,10 +169,15 @@ def convert_to_format():
     # Cleanup
     print("\nCleaning up...")
     import shutil
-    if Path("data_clean").exists():
-        shutil.rmtree("data_clean")
-    if Path("medqa_data.tar.gz").exists():
-        Path("medqa_data.tar.gz").unlink()
+    cleanup_paths = ["data_clean", "MedQA", "questions", "medqa_data.tar.gz"]
+    for path_str in cleanup_paths:
+        path = Path(path_str)
+        if path.exists():
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+            print(f"Removed {path_str}")
 
     print("\n" + "=" * 60)
     print("Download complete!")
