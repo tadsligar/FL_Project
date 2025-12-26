@@ -128,15 +128,15 @@ def convert_to_format():
             rel_path = item.relative_to(base_path)
             print(f"  {rel_path}")
 
-    # Process each split
+    # Process each split - files are directly in US/ directory
     configs = [
-        ("test", "4_options", "test_4opt"),
-        ("dev", "4_options", "dev_4opt"),
-        ("train", "4_options", "train_4opt"),
+        ("test", "test_4opt"),
+        ("dev", "dev_4opt"),
+        ("train", "train_4opt"),
     ]
 
-    for split, opt_type, output_name in configs:
-        input_file = base_path / opt_type / f"{split}.jsonl"
+    for split, output_name in configs:
+        input_file = base_path / f"{split}.jsonl"
 
         if not input_file.exists():
             print(f"Warning: {input_file} not found, skipping")
