@@ -121,6 +121,13 @@ def convert_to_format():
         print("\n✗ Could not find MedQA data files in extracted archive")
         return
 
+    # List what's actually in the base path
+    print(f"\nContents of {base_path}:")
+    for item in sorted(base_path.rglob("*")):
+        if item.is_file() and item.suffix in [".jsonl", ".json"]:
+            rel_path = item.relative_to(base_path)
+            print(f"  {rel_path}")
+
     # Process each split
     configs = [
         ("test", "4_options", "test_4opt"),
