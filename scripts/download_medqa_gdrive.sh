@@ -11,10 +11,13 @@ echo ""
 
 cd "$(dirname "$0")/.."  # Go to project root
 
+# Install gdown for Google Drive downloads
+echo "Installing gdown (Google Drive downloader)..."
+pip install -q gdown
+
 # Download from Google Drive
 echo "Downloading MedQA dataset archive (~500MB)..."
-curl -L "https://drive.google.com/uc?export=download&id=1ImYUSLk9JbgHXOemfvyiDiirluZHPeQw" \
-  -o medqa_data.tar.gz
+gdown "1ImYUSLk9JbgHXOemfvyiDiirluZHPeQw" -O medqa_data.tar.gz
 
 echo ""
 echo "Extracting archive..."
