@@ -20,18 +20,16 @@ echo "Downloading MedQA dataset archive (~500MB)..."
 gdown "1ImYUSLk9JbgHXOemfvyiDiirluZHPeQw" -O medqa_data.tar.gz
 
 echo ""
-echo "Checking file type..."
-file medqa_data.tar.gz
-
-echo ""
 echo "Extracting archive..."
-# Try to detect and extract based on file type
-if file medqa_data.tar.gz | grep -q "gzip"; then
-    tar -xzf medqa_data.tar.gz
-elif file medqa_data.tar.gz | grep -q "Zip"; then
+# Try different extraction methods (file command not available)
+if unzip -t medqa_data.tar.gz >/dev/null 2>&1; then
+    echo "Detected ZIP format, extracting with unzip..."
     unzip -q medqa_data.tar.gz
+elif tar -tzf medqa_data.tar.gz >/dev/null 2>&1; then
+    echo "Detected tar.gz format, extracting..."
+    tar -xzf medqa_data.tar.gz
 else
-    # Try as regular tar
+    echo "Trying regular tar..."
     tar -xf medqa_data.tar.gz
 fi
 
